@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use BackedEnum;
+use App\Filament\Resources\ParticipantResource\Pages;
+use App\Models\Participant;
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
+class ParticipantResource extends Resource
+{
+    protected static ?string $model = Participant::class;
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationLabel = 'Participants';
+    protected static ?int    $navigationSort = 3;
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            TextInput::make('stud_fname')->label('First Name')->required()->maxLength(100),
+            TextInput::make('stud_lname')->label('Last Name')->required()->maxLength(100),
+            TextInput::make('stud_email')->label('Email')->email()->nullable(),
+            TextInput::make('tot_credit')
+                ->label('Credits')
+                ->integer()
+                ->minValue(0)
+                ->default(0)
+                ->required(),
+
+            Section::make('Login Credentials')
+                ->description('Required to create the participant\'s login account.')
+                ->visibleOn('create')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('username')
+                        ->label('Username')
+                        ->required()
+                        ->maxLength(100)
+                        ->unique('ebc_user_master', 'user_login_id'),
+
+                    TextInput::make('password')
+                        ->label('Password')
+                        ->password()
+                        ->required()
+                        ->minLength(8),
+                ]),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('stud_lname')
+                    ->label('Last Name')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('stud_fname')
+                    ->label('First Name')
+                    ->searchable(),
+
+                TextColumn::make('stud_email')
+                    ->label('Email')
+                    ->searchable(),
+
+                TextColumn::make('tot_credit')
+                    ->label('Credits')
+                    ->sortable(),
+
+                TextColumn::make('testResults_count')
+                    ->label('Assessments')
+                    ->counts('testResults'),
+
+                TextColumn::make('created_at')
+                    ->label('Registered')
+                    ->date()
+                    ->sortable(),
+            ])
+            ->filters([
+                Filter::make('has_credit')
+                    ->label('Has credits')
+                    ->query(fn (Builder $q) => $q->where('tot_credit', '>', 0)),
+            ])
+            ->actions([
+                Action::make('addCredit')
+                    ->label('+ Credit')
+                    ->icon('heroicon-o-plus-circle')
+                    ->color('success')
+                    ->action(fn (Participant $r) => $r->increment('tot_credit'))
+                    ->requiresConfirmation(),
+
+                Action::make('removeCredit')
+                    ->label('− Credit')
+                    ->icon('heroicon-o-minus-circle')
+                    ->color('danger')
+                    ->visible(fn (Participant $r) => $r->tot_credit > 0)
+                    ->action(fn (Participant $r) => $r->decrement('tot_credit'))
+                    ->requiresConfirmation(),
+
+                EditAction::make(),
+            ])
+            ->defaultSort('stud_lname');
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index'  => Pages\ListParticipants::route('/'),
+            'create' => Pages\CreateParticipant::route('/create'),
+            'edit'   => Pages\EditParticipant::route('/{record}/edit'),
+        ];
+    }
+}

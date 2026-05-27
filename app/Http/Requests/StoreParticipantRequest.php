@@ -22,6 +22,20 @@ class StoreParticipantRequest extends FormRequest
             'username'   => ['required', 'string', 'min:4', 'max:50', 'unique:ebc_user_master,user_login_id'],
             'password'   => ['required', 'string', 'min:8', 'confirmed'],
             'gender'     => ['nullable', 'in:Male,Female,Other,Prefer not to say'],
+
+            // R-31: phone optional at registration; required for SMS recovery later.
+            'phone'      => ['nullable', 'string', 'max:50', 'regex:/^[\d\s\+\-\(\)\.]+$/'],
+
+            // Legacy parity (mailing address). State accepts 2-letter for US,
+            // free-text for international — R-35 BillingState rule applied via country.
+            'address'    => ['nullable', 'string', 'max:200'],
+            'city'       => ['nullable', 'string', 'max:100'],
+            'state'      => ['nullable', 'string', 'max:100', new \App\Rules\BillingState($this->input('country'))],
+            'zip'        => ['nullable', 'string', 'max:20'],
+            'country'    => ['nullable', 'string', 'size:2'],   // ISO-3166-1 alpha-2
+
+            // Scholarship / prepaid code (R-33). Validated more deeply in controller.
+            'scholarship_code' => ['nullable', 'string', 'max:50'],
         ];
     }
 
@@ -30,6 +44,8 @@ class StoreParticipantRequest extends FormRequest
         return [
             'first_name.regex' => 'First name may only contain letters, spaces, apostrophes, hyphens, and periods.',
             'last_name.regex'  => 'Last name may only contain letters, spaces, apostrophes, hyphens, and periods.',
+            'phone.regex'      => 'Phone may only contain digits, spaces, and the characters + - ( ) .',
+            'country.size'     => 'Select a country.',
         ];
     }
 }

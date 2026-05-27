@@ -3,7 +3,9 @@
 @section('title', 'Register — DISC Report')
 
 @section('content')
-<div class="max-w-lg mx-auto">
+<div class="max-w-2xl mx-auto">
+    @include('participant._progress', ['step' => 5])
+
     <h1 class="text-2xl font-bold mb-1">Create Your Account</h1>
     <p class="text-gray-600 mb-6">Register to take the DISC assessment for <strong>{{ $course->course_name }}</strong>.</p>
 
@@ -67,6 +69,75 @@
                 <option value="Prefer not to say" {{ old('gender') === 'Prefer not to say' ? 'selected' : '' }}>Prefer not to say</option>
             </select>
         </div>
+
+        {{-- R-31: phone is optional at registration; required later for SMS recovery. --}}
+        <div>
+            <label class="block text-sm font-medium mb-1" for="phone">
+                Phone <span class="text-gray-400 font-normal">(optional &mdash; required to use SMS recovery)</span>
+            </label>
+            <input id="phone" name="phone" type="tel" maxlength="50"
+                   value="{{ old('phone') }}" placeholder="+1 (555) 123-4567"
+                   class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('phone') border-red-400 @enderror">
+            @error('phone')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+        </div>
+
+        {{-- Mailing address — legacy parity --}}
+        <fieldset class="border border-gray-200 rounded p-4">
+            <legend class="text-sm font-medium px-2">Mailing address <span class="text-gray-400 font-normal">(optional)</span></legend>
+
+            <div class="mb-3">
+                <label class="block text-sm font-medium mb-1" for="address">Street address</label>
+                <input id="address" name="address" type="text" maxlength="200"
+                       value="{{ old('address') }}"
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="city">City</label>
+                    <input id="city" name="city" type="text" maxlength="100"
+                           value="{{ old('city') }}"
+                           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="zip">ZIP / Postal code</label>
+                    <input id="zip" name="zip" type="text" maxlength="20"
+                           value="{{ old('zip') }}"
+                           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="state">
+                        State / Province
+                        <span class="text-gray-400 font-normal text-xs">(US: 2-letter, e.g. IL)</span>
+                    </label>
+                    <input id="state" name="state" type="text" maxlength="100"
+                           value="{{ old('state') }}"
+                           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('state') border-red-400 @enderror">
+                    @error('state')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="country">Country</label>
+                    <select id="country" name="country"
+                            class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('country') border-red-400 @enderror">
+                        <option value="">— Select —</option>
+                        @foreach ([
+                            'US' => 'United States',
+                            'CA' => 'Canada', 'GB' => 'United Kingdom', 'AU' => 'Australia',
+                            'IN' => 'India',   'DE' => 'Germany',       'FR' => 'France',
+                            'IE' => 'Ireland', 'NZ' => 'New Zealand',   'ZA' => 'South Africa',
+                            'MX' => 'Mexico',  'BR' => 'Brazil',        'JP' => 'Japan',
+                            'SG' => 'Singapore','NL' => 'Netherlands',  'ES' => 'Spain',
+                        ] as $code => $name)
+                            <option value="{{ $code }}" {{ old('country') === $code ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                    @error('country')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+            </div>
+        </fieldset>
 
         <div>
             <label class="block text-sm font-medium mb-1" for="scholarship_code">

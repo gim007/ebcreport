@@ -25,14 +25,53 @@ class ReportPdfService
     {
         $html = View::make('reports.pdf', $this->buildViewData($result))->render();
 
+        // Use Chrome's print header/footer HTML so the four-color bars + copyright
+        // repeat on EVERY page (including continuations from page-break-inside).
+        // Content margins (top/bottom) give that chrome room.
         return Browsershot::html($html)
-            ->noSandbox()                    // required when running as non-root in containers
-            ->showBackground()               // honour CSS background colors (header/footer bars)
-            ->format('Letter')               // R-21 US Letter
-            ->margins(0, 0, 0, 0)            // the design uses full-bleed color bars
+            ->noSandbox()
+            ->showBackground()
+            ->format('Letter')                           // R-21 US Letter
+            ->margins(14, 0, 22, 0)                      // top ~40pt / bottom ~62pt
+            ->showBrowserHeaderAndFooter()
+            ->headerHtml($this->printHeaderHtml())
+            ->footerHtml($this->printFooterHtml())
             ->waitUntilNetworkIdle()
             ->setOption('args', ['--disable-dev-shm-usage'])
             ->pdf();
+    }
+
+    /** Per-page top chrome (R-47): four-color bar strip rendered on every PDF page.
+     *  Chrome's print header strips most CSS — we use inline SVG which always
+     *  renders, with `width:100%` on the wrapper to span the full page width. */
+    private function printHeaderHtml(): string
+    {
+        return '<div style="width:100%; -webkit-print-color-adjust:exact; print-color-adjust:exact;">'
+            . '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="8" preserveAspectRatio="none" viewBox="0 0 100 8">'
+            . '<rect x="0"  y="0" width="25" height="6" fill="#2e7d32"/>'
+            . '<rect x="25" y="0" width="25" height="6" fill="#c62828"/>'
+            . '<rect x="50" y="0" width="25" height="6" fill="#1565c0"/>'
+            . '<rect x="75" y="0" width="25" height="6" fill="#f9a825"/>'
+            . '</svg>'
+            . '</div>';
+    }
+
+    /** Per-page bottom chrome (R-47): copyright + dark edge + four-color bar strip. */
+    private function printFooterHtml(): string
+    {
+        $year = date('Y');
+        return '<div style="width:100%; font-family:Helvetica,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact;">'
+            . '<div style="text-align:center; font-size:8pt; color:#6b7280; padding:0 0 4pt;">'
+            . '&copy; ' . $year . ' Spark Point Training LLC. All rights reserved.'
+            . '</div>'
+            . '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="12" preserveAspectRatio="none" viewBox="0 0 100 12">'
+            . '<rect x="0"  y="0" width="25" height="6" fill="#2e7d32"/>'
+            . '<rect x="25" y="0" width="25" height="6" fill="#c62828"/>'
+            . '<rect x="50" y="0" width="25" height="6" fill="#1565c0"/>'
+            . '<rect x="75" y="0" width="25" height="6" fill="#f9a825"/>'
+            . '<rect x="0"  y="6" width="100" height="4" fill="#111827"/>'
+            . '</svg>'
+            . '</div>';
     }
 
     private function buildViewData(TestResult $result): array
@@ -41,7 +80,11 @@ class ReportPdfService
         $sections        = $this->paragraphs->generate($result);
         $organization    = $this->resolveOrganization($result);
         $orgId           = $organization?->getKey();
-        $enabledSections = $this->sectionService->enabledSectionsFor($orgId !== null ? (int) $orgId : null);
+        $courseId        = $result->course_id !== null ? (int) $result->course_id : null;
+        $enabledSections = $this->sectionService->enabledSectionsFor(
+            $orgId !== null ? (int) $orgId : null,
+            $courseId,
+        );
 
         return [
             'result'           => $result,

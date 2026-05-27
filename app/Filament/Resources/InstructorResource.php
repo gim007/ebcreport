@@ -20,7 +20,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class InstructorResource extends Resource
 {
@@ -28,27 +27,85 @@ class InstructorResource extends Resource
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?int    $navigationSort = 2;
 
+    private const COUNTRIES = [
+        'US' => 'United States', 'CA' => 'Canada', 'GB' => 'United Kingdom',
+        'AU' => 'Australia', 'IN' => 'India', 'DE' => 'Germany', 'FR' => 'France',
+        'IE' => 'Ireland', 'NZ' => 'New Zealand', 'ZA' => 'South Africa',
+        'MX' => 'Mexico', 'BR' => 'Brazil', 'JP' => 'Japan',
+        'SG' => 'Singapore', 'NL' => 'Netherlands', 'ES' => 'Spain',
+    ];
+
+    private const TIMEZONES = [
+        'America/New_York'    => 'Eastern Time (US)',
+        'America/Chicago'     => 'Central Time (US)',
+        'America/Denver'      => 'Mountain Time (US)',
+        'America/Los_Angeles' => 'Pacific Time (US)',
+        'America/Anchorage'   => 'Alaska Time',
+        'Pacific/Honolulu'    => 'Hawaii-Aleutian Time',
+        'Europe/London'       => 'London (GMT/BST)',
+        'Europe/Berlin'       => 'Berlin / Central Europe',
+        'Asia/Kolkata'        => 'India Standard Time',
+        'Asia/Singapore'      => 'Singapore',
+        'Australia/Sydney'    => 'Sydney',
+    ];
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('ins_fname')->label('First Name')->required()->maxLength(100),
-            TextInput::make('ins_lname')->label('Last Name')->required()->maxLength(100),
-            TextInput::make('ins_email')->label('Email')->email()->maxLength(255),
+            Section::make('Identity')
+                ->columns(12)
+                ->schema([
+                    TextInput::make('ins_title')->label('Title')->maxLength(50)->columnSpan(2),
+                    TextInput::make('ins_fname')->label('First Name')->required()->maxLength(100)->columnSpan(5),
+                    TextInput::make('ins_lname')->label('Last Name')->required()->maxLength(100)->columnSpan(5),
+                    Select::make('ins_gender')->label('Gender')->options([
+                        'Male' => 'Male', 'Female' => 'Female',
+                        'Other' => 'Other', 'Prefer not to say' => 'Prefer not to say',
+                    ])->columnSpan(4),
+                ]),
 
-            Select::make('uni_id')
-                ->label('Organization')
-                ->relationship('organization', 'uni_name')
-                ->searchable()
-                ->required(),
+            Section::make('Contact')
+                ->description('Phone is required for SMS recovery (R-31).')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('ins_email')->label('Email')->email()->maxLength(255),
+                    TextInput::make('ins_phone')->label('Phone')->tel()->maxLength(50),
+                ]),
 
-            Select::make('admin_approval')
-                ->label('Approval Status')
-                ->options(['Pending' => 'Pending', 'Approved' => 'Approved', 'Rejected' => 'Rejected'])
-                ->default('Approved')
-                ->required(),
+            Section::make('Organization & Access')
+                ->columns(2)
+                ->schema([
+                    Select::make('uni_id')
+                        ->label('Organization')
+                        ->relationship('organization', 'uni_name')
+                        ->searchable()
+                        ->required(),
+                    Select::make('admin_approval')
+                        ->label('Approval Status')
+                        ->options(['Pending' => 'Pending', 'Approved' => 'Approved', 'Rejected' => 'Rejected'])
+                        ->default('Approved')
+                        ->required(),
+                    Toggle::make('is_hidden')->label('Hidden from participants')->columnSpan(2),
+                ]),
 
-            Toggle::make('is_hidden')
-                ->label('Hidden from participants'),
+            Section::make('Mailing Address')
+                ->columns(12)
+                ->schema([
+                    TextInput::make('ins_address')->label('Street')->maxLength(200)->columnSpan(8),
+                    TextInput::make('ins_address_cont')->label('Apt / Suite')->maxLength(200)->columnSpan(4),
+                    TextInput::make('ins_city')->label('City')->maxLength(100)->columnSpan(4),
+                    TextInput::make('ins_state')->label('State / Province')
+                        ->helperText('US: 2-letter (IL, TX, CA). Intl: free-text.')
+                        ->maxLength(100)->columnSpan(3),
+                    TextInput::make('ins_zip')->label('ZIP / Postal')->maxLength(20)->columnSpan(2),
+                    Select::make('ins_country')->label('Country')->options(self::COUNTRIES)->searchable()->columnSpan(3),
+                ]),
+
+            Section::make('Scheduling')
+                ->columns(2)
+                ->schema([
+                    Select::make('ins_timezone')->label('Timezone')->options(self::TIMEZONES)->searchable(),
+                ]),
 
             Section::make('Login Credentials')
                 ->description('Required to create the instructor\'s login account.')
@@ -60,7 +117,6 @@ class InstructorResource extends Resource
                         ->required()
                         ->maxLength(100)
                         ->unique('ebc_user_master', 'user_login_id'),
-
                     TextInput::make('password')
                         ->label('Password')
                         ->password()
@@ -74,23 +130,13 @@ class InstructorResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('ins_lname')
-                    ->label('Last Name')
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('ins_fname')
-                    ->label('First Name')
-                    ->searchable(),
-
-                TextColumn::make('ins_email')
-                    ->label('Email')
-                    ->searchable(),
-
-                TextColumn::make('organization.uni_name')
-                    ->label('Organization')
-                    ->sortable(),
-
+                TextColumn::make('ins_lname')->label('Last Name')->searchable()->sortable(),
+                TextColumn::make('ins_fname')->label('First Name')->searchable(),
+                TextColumn::make('ins_email')->label('Email')->searchable()->toggleable(),
+                TextColumn::make('ins_phone')->label('Phone')->toggleable()->toggledHiddenByDefault(),
+                TextColumn::make('organization.uni_name')->label('Organization')->sortable()->searchable(),
+                TextColumn::make('ins_city')->label('City')->toggleable()->toggledHiddenByDefault(),
+                TextColumn::make('ins_country')->label('Country')->toggleable()->toggledHiddenByDefault(),
                 TextColumn::make('admin_approval')
                     ->label('Status')
                     ->badge()
@@ -99,19 +145,17 @@ class InstructorResource extends Resource
                         'Rejected' => 'danger',
                         default    => 'warning',
                     }),
-
-                IconColumn::make('is_hidden')
-                    ->label('Hidden')
-                    ->boolean()
-                    ->trueColor('warning'),
+                IconColumn::make('is_hidden')->label('Hidden')->boolean()->trueColor('warning'),
             ])
             ->filters([
+                SelectFilter::make('uni_id')
+                    ->label('Organization')
+                    ->relationship('organization', 'uni_name')
+                    ->searchable(),
                 SelectFilter::make('admin_approval')
                     ->label('Status')
                     ->options(['Pending' => 'Pending', 'Approved' => 'Approved', 'Rejected' => 'Rejected']),
-
-                TernaryFilter::make('is_hidden')
-                    ->label('Hidden'),
+                TernaryFilter::make('is_hidden')->label('Hidden'),
             ])
             ->actions([
                 Action::make('approve')

@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
+use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
 {
-    use Notifiable;
+    use Notifiable, CanResetPasswordTrait;
 
     protected $table      = 'ebc_user_master';
     protected $primaryKey = 'user_id';
@@ -18,6 +21,7 @@ class User extends Authenticatable
         'user_login_id',
         'user_password',
         'user_email',
+        'email_verified_at',
         'user_type',
         'user_status',
         'social_provider',
@@ -30,14 +34,32 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'user_password' => 'hashed',
+            'user_password'     => 'hashed',
+            'email_verified_at' => 'datetime',
         ];
     }
 
-    // Override the default auth password field name
     public function getAuthPassword(): string
     {
         return $this->user_password;
+    }
+
+    /** Laravel's MustVerifyEmail uses `email` by default; map to legacy column. */
+    public function getEmailForVerification(): string
+    {
+        return $this->user_email;
+    }
+
+    /** CanResetPassword: same mapping for the password-reset broker. */
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->user_email;
+    }
+
+    /** Laravel emails verification + password-reset notifications via this address. */
+    public function routeNotificationForMail(): string
+    {
+        return $this->user_email;
     }
 
     public function participant(): HasOne

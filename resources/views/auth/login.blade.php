@@ -60,6 +60,8 @@
             </form>
 
             <div class="links">
+                <a href="{{ route('password.request') }}">Forgot password?</a>
+                &nbsp;&middot;&nbsp;
                 <a href="{{ route('forgot-username') }}">Forgot username?</a>
             </div>
         </div>

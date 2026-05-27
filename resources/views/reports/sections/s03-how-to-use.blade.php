@@ -1,5 +1,4 @@
 <div class="page">
-    @include('reports.partials.page-frame')
 
     <h2>How to Use This Report</h2>
 

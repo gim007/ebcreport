@@ -1,5 +1,4 @@
 <div class="page">
-    @include('reports.partials.page-frame')
 
     <h2 style="border-left-color:#c62828;">Blind Spots &amp; Limitations</h2>
 

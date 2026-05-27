@@ -1,5 +1,4 @@
 <div class="page">
-    @include('reports.partials.page-frame')
 
     <h2 style="border-left-color:#1565c0;">Communication Preferences</h2>
 

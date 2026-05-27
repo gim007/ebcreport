@@ -18,6 +18,12 @@ class Participant extends Model
         'stud_lname',
         'stud_email',
         'stud_gender',
+        'stud_phone',
+        'stud_address',
+        'stud_city',
+        'stud_state',
+        'stud_zip',
+        'stud_country',
         'tot_credit',
         'inst_id',
         'course_id',
@@ -31,6 +37,16 @@ class Participant extends Model
     public function testResults(): HasMany
     {
         return $this->hasMany(TestResult::class, 'stud_id', 'stud_id');
+    }
+
+    public function instructor(): BelongsTo
+    {
+        return $this->belongsTo(Instructor::class, 'inst_id', 'ins_id');
+    }
+
+    public function course(): BelongsTo
+    {
+        return $this->belongsTo(Course::class, 'course_id', 'course_id');
     }
 
     public function getFullNameAttribute(): string

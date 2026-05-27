@@ -39,6 +39,8 @@ class RegisterParticipantController extends Controller
             return redirect()->route('participant.account')->with('status', 'Registered with scholarship code.');
         }
 
-        return redirect()->route('participant.payment', $courseId);
+        // Legacy parity: after registration, let the participant pick payment
+        // method (card vs prepaid code) before going to checkout.
+        return redirect()->route('participant.payment.choose', $courseId);
     }
 }

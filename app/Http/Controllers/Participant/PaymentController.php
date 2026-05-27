@@ -11,6 +11,18 @@ use Stripe\StripeClient;
 
 class PaymentController extends Controller
 {
+    /**
+     * Legacy parity (student_registration_payment.php): let the participant
+     * pick how to pay — card now, or a prepaid/scholarship code — before
+     * landing on either checkout page.
+     */
+    public function choose(int $courseId)
+    {
+        $course = Course::findOrFail($courseId);
+
+        return view('participant.payment-method', compact('course'));
+    }
+
     public function show(int $courseId)
     {
         $course = Course::findOrFail($courseId);

@@ -3,6 +3,8 @@
 @section('title', 'Select Course — DISC Report')
 
 @section('content')
+@include('participant._progress', ['step' => 4])
+
 <div class="mb-2 text-sm text-gray-500">
     <a href="{{ route('participant.organizations') }}" class="hover:underline">Organizations</a>
     &rsaquo;

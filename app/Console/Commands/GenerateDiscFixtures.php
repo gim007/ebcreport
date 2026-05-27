@@ -54,8 +54,11 @@ class GenerateDiscFixtures extends Command
             ->whereNotNull('least_result_str')
             ->where('most_result_str', '!=', '')
             ->where('least_result_str', '!=', '')
+            ->where(DB::raw('CHAR_LENGTH(most_result_str)'),  '=', 48)
+            ->where(DB::raw('CHAR_LENGTH(least_result_str)'), '=', 48)
+            ->orderBy('test_result_id')
             ->limit($limit)
-            ->get(['id', 'most_result_str', 'least_result_str']);
+            ->get(['test_result_id', 'most_result_str', 'least_result_str']);
 
         if ($rows->isEmpty()) {
             $this->error('No rows found in ebc_test_result. Check DB connection.');
@@ -69,7 +72,7 @@ class GenerateDiscFixtures extends Command
             [$m, $ls, $mp, $lp] = $this->score($most, $least);
 
             return [
-                'result_id'  => $row->id,
+                'result_id'  => $row->test_result_id,
                 'most'       => $most,
                 'least'      => $least,
                 'mask_raw'   => $m,

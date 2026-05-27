@@ -8,6 +8,7 @@ use App\Services\ReportSectionService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Panel;
@@ -26,6 +27,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
  */
 class ConfigureSections extends Page implements HasSchemas
 {
+    use InteractsWithRecord;
     use InteractsWithSchemas;
 
     protected static string $resource = OrganizationResource::class;
@@ -34,8 +36,6 @@ class ConfigureSections extends Page implements HasSchemas
 
     public ?array $data = [];
 
-    public Organization $record;
-
     public static function getSlug(?Panel $panel = null): string
     {
         return '{record}/sections';
@@ -43,7 +43,7 @@ class ConfigureSections extends Page implements HasSchemas
 
     public function mount(int | string $record): void
     {
-        $this->record = Organization::query()->findOrFail($record);
+        $this->record = $this->resolveRecord($record);
 
         $overrides = app(ReportSectionService::class)
             ->sectionsWithOverridesFor((int) $this->record->getKey());
@@ -57,8 +57,8 @@ class ConfigureSections extends Page implements HasSchemas
 
     public function form(Schema $schema): Schema
     {
-        $sections = app(ReportSectionService::class)
-            ->sectionsWithOverridesFor((int) ($this->record?->getKey() ?? 0));
+        $recordId = $this->record instanceof Organization ? (int) $this->record->getKey() : 0;
+        $sections = app(ReportSectionService::class)->sectionsWithOverridesFor($recordId);
 
         return $schema
             ->statePath('data')
@@ -97,8 +97,10 @@ class ConfigureSections extends Page implements HasSchemas
         ];
     }
 
-    public function getTitle(): string
+    public function getTitle(): string | \Illuminate\Contracts\Support\Htmlable
     {
-        return "Sections — {$this->record->uni_name}";
+        return $this->record instanceof Organization
+            ? "Sections — {$this->record->uni_name}"
+            : 'Section configuration';
     }
 }

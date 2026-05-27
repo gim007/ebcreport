@@ -1,5 +1,4 @@
 <div class="page">
-    @include('reports.partials.page-frame')
 
     <h2>Overview of the DISC Model</h2>
 
@@ -30,6 +29,7 @@
         </tr>
     </table>
 
+    <div style="page-break-inside: avoid;">
     <h3>Guiding Principles</h3>
     <table style="width:100%; border-collapse:separate; border-spacing:4pt 0;">
         <tr>
@@ -55,4 +55,5 @@
             </td>
         </tr>
     </table>
+    </div>
 </div>

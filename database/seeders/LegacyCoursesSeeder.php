@@ -41,7 +41,10 @@ class LegacyCoursesSeeder extends Seeder
                     'term'          => $row['term']          ?? '',
                     'schedule_time' => $row['schedule_time'] ?? '',
                     'course_price'  => $row['course_price']  ?? 0,
-                    'paragraphs'    => $row['paragraphs']    ?? '',
+                    'is_hidden'     => false,
+                    // expiry_date left null = never expires (legacy used today+300
+                    // but most legacy courses are already historical; null is more
+                    // honest for a seed and lets them remain selectable in dev)
                 ]
             );
             $count++;

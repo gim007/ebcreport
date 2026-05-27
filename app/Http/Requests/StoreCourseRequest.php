@@ -19,7 +19,8 @@ class StoreCourseRequest extends FormRequest
             'term'          => ['nullable', 'string', 'max:100'],
             'schedule_time' => ['nullable', 'string', 'max:100'],
             'course_price'  => ['nullable', 'numeric', 'min:0', 'max:9999.99'],
-            'paragraphs'    => ['nullable', 'string'],
+            'expiry_date'   => ['nullable', 'date', 'after_or_equal:today'],
+            'is_hidden'     => ['sometimes', 'boolean'],
         ];
     }
 }

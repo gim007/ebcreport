@@ -28,8 +28,9 @@ class LegacyOrganizationsSeeder extends Seeder
             DB::table('ebc_university')->updateOrInsert(
                 ['uni_id' => $row['uni_id']],
                 [
-                    'uni_name'  => $row['uni_name'],
-                    'is_hidden' => false,
+                    'uni_name'     => $row['uni_name'],
+                    'course_price' => $row['course_price'] ?? null,
+                    'is_hidden'    => false,
                 ]
             );
             $count++;

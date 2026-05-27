@@ -41,9 +41,26 @@
         </div>
     </div>
 
-    <div>
-        <label class="block text-sm font-medium mb-1" for="paragraphs">Notes / Description</label>
-        <textarea id="paragraphs" name="paragraphs" rows="4"
-                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('paragraphs', $course->paragraphs ?? '') }}</textarea>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium mb-1" for="expiry_date">
+                Expires on <span class="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input id="expiry_date" name="expiry_date" type="date"
+                   value="{{ old('expiry_date', isset($course->expiry_date) ? $course->expiry_date->format('Y-m-d') : '') }}"
+                   class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('expiry_date') border-red-400 @enderror">
+            <p class="text-xs text-gray-500 mt-1">Past-expiry courses are hidden from new participants. Leave blank for no expiry.</p>
+            @error('expiry_date')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="flex items-end pb-1">
+            <label class="inline-flex items-center text-sm">
+                <input type="hidden" name="is_hidden" value="0">
+                <input id="is_hidden" name="is_hidden" type="checkbox" value="1"
+                       {{ old('is_hidden', $course->is_hidden ?? false) ? 'checked' : '' }}
+                       class="mr-2 rounded border-gray-300 focus:ring-blue-500">
+                Hide this course from new participants
+            </label>
+        </div>
     </div>
 </div>

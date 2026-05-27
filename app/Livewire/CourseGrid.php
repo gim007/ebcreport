@@ -25,6 +25,10 @@ class CourseGrid extends Component
     {
         $courses = Course::query()
             ->where('inst_id', $this->instructorId)
+            ->where('is_hidden', false)                // R-38 pattern
+            ->where(fn ($q) => $q                      // hide past-expiry courses
+                ->whereNull('expiry_date')
+                ->orWhere('expiry_date', '>=', today()))
             ->when($this->search, fn ($q) => $q->where('course_name', 'like', "%{$this->search}%"))
             ->orderBy('course_name')
             ->paginate(20);

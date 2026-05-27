@@ -18,7 +18,14 @@ class Course extends Model
         'term',
         'schedule_time',
         'course_price',
-        'paragraphs',
+        'is_hidden',
+        'expiry_date',
+    ];
+
+    protected $casts = [
+        'is_hidden'    => 'boolean',
+        'expiry_date'  => 'date',
+        'course_price' => 'decimal:2',
     ];
 
     public function instructor(): BelongsTo

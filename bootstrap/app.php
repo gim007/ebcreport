@@ -12,10 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role'             => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'instructor'       => \App\Http\Middleware\EnsureInstructor::class,
-            'participant'      => \App\Http\Middleware\EnsureParticipant::class,
+            'role'              => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'instructor'        => \App\Http\Middleware\EnsureInstructor::class,
+            'participant'       => \App\Http\Middleware\EnsureParticipant::class,
             'participant.terms' => \App\Http\Middleware\ParticipantTermsAccepted::class,
+            'guest.redirect'    => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

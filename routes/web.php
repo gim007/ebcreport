@@ -21,11 +21,16 @@ use App\Http\Controllers\Participant\TestController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public landing ──────────────────────────────────────────────────────────
-Route::get('/', fn () => view('welcome'));
+// Authenticated users land directly on their dashboard instead of the marketing
+// page; `guest.redirect` middleware sends them to participant.account or
+// instructor.dashboard based on user_type.
+Route::middleware('guest.redirect')->get('/', fn () => view('welcome'));
 
 // ── Auth — email/password login (with legacy MD5 → bcrypt upgrade) ─────────
-Route::get('/login',   [LoginController::class, 'show'])->name('login');
-Route::post('/login',  [LoginController::class, 'login'])->name('login.attempt');
+Route::middleware('guest.redirect')->group(function () {
+    Route::get('/login',   [LoginController::class, 'show'])->name('login');
+    Route::post('/login',  [LoginController::class, 'login'])->name('login.attempt');
+});
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 // ── SSO — R-30 ──────────────────────────────────────────────────────────────
@@ -35,25 +40,29 @@ Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'
     ->where('provider', 'google|facebook|apple');
 
 // ── Forgot Username — R-32 ──────────────────────────────────────────────────
-Route::get('/forgot-username',  [ForgotUsernameController::class, 'show'])->name('forgot-username');
-Route::post('/forgot-username', [ForgotUsernameController::class, 'send'])->name('forgot-username.send');
+Route::middleware('guest.redirect')->group(function () {
+    Route::get('/forgot-username',  [ForgotUsernameController::class, 'show'])->name('forgot-username');
+    Route::post('/forgot-username', [ForgotUsernameController::class, 'send'])->name('forgot-username.send');
+});
 
 // ── Forgot Password — Laravel signed-token broker, legacy parity ────────────
 // Route names match Laravel's defaults (`password.request`, `password.email`,
 // `password.reset`, `password.update`) so framework helpers + the
 // ResetPassword notification work out of the box.
-Route::get('/forgot-password',         [ForgotPasswordController::class, 'show'])
-    ->middleware('throttle:6,1')->name('password.request');
-Route::post('/forgot-password',        [ForgotPasswordController::class, 'send'])
-    ->middleware('throttle:6,1')->name('password.email');
-Route::get('/reset-password/{token}',  [ResetPasswordController::class, 'show'])
-    ->middleware('throttle:6,1')->name('password.reset');
-Route::post('/reset-password',         [ResetPasswordController::class, 'reset'])
-    ->middleware('throttle:6,1')->name('password.update');
+Route::middleware(['guest.redirect', 'throttle:6,1'])->group(function () {
+    Route::get('/forgot-password',         [ForgotPasswordController::class, 'show'])->name('password.request');
+    Route::post('/forgot-password',        [ForgotPasswordController::class, 'send'])->name('password.email');
+    Route::get('/reset-password/{token}',  [ResetPasswordController::class, 'show'])->name('password.reset');
+    Route::post('/reset-password',         [ResetPasswordController::class, 'reset'])->name('password.update');
+});
 
 // ── Terms of Service gate (legacy parity with student_reg_terms.php) ───────
-Route::get('/register',         [TermsController::class, 'show'])->name('participant.terms');
-Route::post('/register/terms',  [TermsController::class, 'accept'])->name('participant.terms.accept');
+// Logged-in users don't need to re-accept terms or pick a new course — redirect
+// them to their account.
+Route::middleware('guest.redirect')->group(function () {
+    Route::get('/register',         [TermsController::class, 'show'])->name('participant.terms');
+    Route::post('/register/terms',  [TermsController::class, 'accept'])->name('participant.terms.accept');
+});
 
 // ── Course selection (gated by Terms acceptance for new participants) ──────
 Route::middleware('participant.terms')->group(function () {
@@ -93,9 +102,11 @@ Route::middleware(['auth'])->name('participant.')->group(function () {
     Route::get('/reports/{resultId}/download', [ReportController::class, 'download'])->name('report.download');
 });
 
-// ── Instructor registration (public) ────────────────────────────────────────
-Route::get('/instructor/register',  [InstructorRegistrationController::class, 'show'])->name('instructor.register');
-Route::post('/instructor/register', [InstructorRegistrationController::class, 'store'])->name('instructor.register.store');
+// ── Instructor registration (public; guest-only) ───────────────────────────
+Route::middleware('guest.redirect')->group(function () {
+    Route::get('/instructor/register',  [InstructorRegistrationController::class, 'show'])->name('instructor.register');
+    Route::post('/instructor/register', [InstructorRegistrationController::class, 'store'])->name('instructor.register.store');
+});
 
 // ── Instructor email verification (signed URLs, R-26 / legacy parity) ──────
 // The signed-URL consumer route must be named `verification.verify` because

@@ -37,4 +37,14 @@ class Course extends Model
     {
         return $this->hasMany(TestResult::class, 'course_id', 'course_id');
     }
+
+    /**
+     * Participants enrolled in this course. The new schema records
+     * course_id directly on ebc_student (added by
+     * 2026_05_25_000008_add_inst_course_to_ebc_student).
+     */
+    public function participants(): HasMany
+    {
+        return $this->hasMany(Participant::class, 'course_id', 'course_id');
+    }
 }

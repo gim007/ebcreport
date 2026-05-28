@@ -14,6 +14,7 @@
         @auth
             <span class="text-blue-200">{{ Auth::user()->instructor?->full_name }}</span>
             <a href="{{ route('instructor.courses.index') }}" class="hover:text-white text-blue-200">Courses</a>
+            <a href="{{ route('instructor.account') }}" class="hover:text-white text-blue-200">My Account</a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="text-blue-200 hover:text-white">Sign out</button>

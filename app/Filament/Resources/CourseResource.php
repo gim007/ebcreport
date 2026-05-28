@@ -180,6 +180,13 @@ class CourseResource extends Resource
             ->defaultSort('course_name');
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            CourseResource\RelationManagers\ParticipantsRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [

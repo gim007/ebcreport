@@ -83,8 +83,11 @@ class LoginController extends Controller
 
     private function defaultRedirect(User $user): string
     {
+        // Land both user types on their account page after sign-in. Account
+        // is the natural starting point: it shows credentials/profile and
+        // links to everything else (dashboard, courses, reports).
         if ($user->isInstructor()) {
-            return route('instructor.dashboard');
+            return route('instructor.account');
         }
         return route('participant.account');
     }

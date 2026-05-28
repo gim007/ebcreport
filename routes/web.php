@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\ForgotUsernameController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Instructor\InstructorAccountController;
 use App\Http\Controllers\Instructor\InstructorCourseController;
 use App\Http\Controllers\Instructor\InstructorDashboardController;
 use App\Http\Controllers\Instructor\InstructorRegistrationController;
@@ -126,6 +127,11 @@ Route::middleware('auth')->group(function () {
 // ── Authenticated instructor area ────────────────────────────────────────────
 Route::middleware(['auth', 'instructor'])->prefix('instructor')->name('instructor.')->group(function () {
     Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
+
+    // Account / profile self-service (legacy parity with instructor_account.php)
+    Route::get('/account',           [InstructorAccountController::class, 'show'])->name('account');
+    Route::put('/account',           [InstructorAccountController::class, 'update'])->name('account.update');
+    Route::post('/account/password', [InstructorAccountController::class, 'updatePassword'])->name('account.password');
 
     // Courses CRUD
     Route::get('/courses',                  [InstructorCourseController::class, 'index'])->name('courses.index');

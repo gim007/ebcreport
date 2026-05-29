@@ -20,5 +20,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // R-08: production must not leak detail to users.
         //
+        // - PII fields (passwords, credit cards, tokens) are excluded from
+        //   the validation-error redirect payload so they never end up in
+        //   browser session / flash data
+        // - Custom branded error pages live in resources/views/errors/
+        //   and are picked up automatically by Laravel
+        // - Full exception logging happens to storage/logs (daily channel
+        //   in prod) regardless of what the user sees
+        $exceptions->dontFlash([
+            'current_password',
+            'password',
+            'password_confirmation',
+            'payment_method_id',
+            '_token',
+        ]);
     })->create();

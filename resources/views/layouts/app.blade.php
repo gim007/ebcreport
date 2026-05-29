@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     @livewireStyles
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
 
 <nav class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
     <a href="{{ route('participant.organizations') }}" class="text-lg font-bold text-blue-700">DISC Report</a>
@@ -25,7 +25,7 @@
     </div>
 </nav>
 
-<main class="max-w-5xl mx-auto px-4 py-8">
+<main class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
     @if (session('status'))
         <div class="mb-4 px-4 py-3 bg-green-50 border border-green-300 text-green-800 rounded">
             {{ session('status') }}
@@ -44,6 +44,8 @@
 
     @yield('content')
 </main>
+
+@include('partials.footer')
 
 @livewireScripts
 @stack('scripts')

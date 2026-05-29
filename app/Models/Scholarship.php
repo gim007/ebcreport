@@ -3,12 +3,25 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
 // R-33: universal subscription codes — one code usable by multiple participants
 class Scholarship extends Model
 {
+    use LogsActivity;
+
     protected $table      = 'ebc_scholarship';
     protected $primaryKey = 'scholarship_id';
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+
 
     protected $fillable = [
         'scholarship_code',

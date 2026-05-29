@@ -52,9 +52,17 @@
         .card.login input:focus { outline: 2px solid #1565c0; outline-offset: 0; border-color: #1565c0; }
         .card.login .meta { font-size: 12px; color: #6b7280; margin-top: 6px; text-align: center; }
 
-        /* Footer nav */
-        footer { max-width: 1080px; margin: 0 auto; padding: 24px; color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-        footer nav a { color: #4b5563; margin-right: 16px; }
+        /* Footer */
+        footer { border-top: 1px solid #e5e7eb; background: #fff; margin-top: 32px; }
+        .footer-inner { max-width: 1080px; margin: 0 auto; padding: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; color: #6b7280; font-size: 13px; }
+        .footer-inner .col-title { font-weight: 600; color: #111827; margin-bottom: 4px; }
+        .footer-inner a { color: #4b5563; }
+        .footer-inner a:hover { color: #1565c0; }
+        .footer-inner .col:last-child { text-align: right; }
+        @media (max-width: 720px) {
+            .footer-inner { grid-template-columns: 1fr; }
+            .footer-inner .col:last-child { text-align: left; }
+        }
 
         @media (max-width: 720px) {
             .hero { grid-template-columns: 1fr; padding-top: 36px; gap: 24px; }
@@ -134,12 +142,23 @@
     </section>
 
     <footer>
-        <nav>
-            <a href="{{ route('login') }}">Sign in</a>
-            <a href="{{ route('password.request') }}">Forgot password</a>
-            <a href="{{ route('forgot-username') }}">Forgot username</a>
-        </nav>
-        <div>&copy; {{ now()->format('Y') }} Spark Point Training LLC. All rights reserved.</div>
+        <div class="footer-inner">
+            <div class="col">
+                <div class="col-title">Spark Point Training LLC</div>
+                <div>2100 Elmwood Ave</div>
+                <div>Wilmette, IL 60091</div>
+            </div>
+            <div class="col">
+                <div class="col-title">Contact</div>
+                <div><a href="tel:+18479063472">847-906-DISC (3472)</a></div>
+                <div><a href="mailto:support@discreport.com">support@discreport.com</a></div>
+            </div>
+            <div class="col">
+                <div class="col-title">DISC Report</div>
+                <div>&copy; {{ now()->format('Y') }} Spark Point Training LLC.</div>
+                <div>All rights reserved.</div>
+            </div>
+        </div>
     </footer>
 </body>
 </html>

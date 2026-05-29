@@ -15,6 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Suppress activity_log writes during seeding. Without this, every
+        // model save produces an audit row — ~600+ noise entries on a fresh
+        // seed. Audit logging resumes immediately after this command exits
+        // (config is request-scoped).
+        config(['activitylog.enabled' => false]);
+
         $this->call(ReportSectionsSeeder::class);
 
         // Legacy data (anonymized PII per SOW staging requirement) — order matters

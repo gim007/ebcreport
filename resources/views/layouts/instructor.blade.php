@@ -6,7 +6,7 @@
     <title>@yield('title', 'Instructor Portal — DISC Report')</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
 
 <nav class="bg-blue-800 text-white px-6 py-3 flex items-center justify-between">
     <a href="{{ route('instructor.dashboard') }}" class="font-bold text-lg">DISC Report &mdash; Instructor Portal</a>
@@ -31,7 +31,7 @@
     @endif
 @endauth
 
-<main class="max-w-6xl mx-auto px-4 py-8">
+<main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
     @if (session('status'))
         <div class="mb-4 px-4 py-3 bg-green-50 border border-green-300 text-green-800 rounded">
             {{ session('status') }}
@@ -50,6 +50,8 @@
 
     @yield('content')
 </main>
+
+@include('partials.footer')
 
 </body>
 </html>

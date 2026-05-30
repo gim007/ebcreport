@@ -50,6 +50,8 @@
         .card.login form  { display: flex; flex-direction: column; gap: 8px; }
         .card.login input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; font-family: inherit; }
         .card.login input:focus { outline: 2px solid #1565c0; outline-offset: 0; border-color: #1565c0; }
+        .card.login input.has-error { border-color: #c62828; }
+        .card.login .login-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 8px 10px; border-radius: 8px; font-size: 12px; margin-bottom: 4px; }
         .card.login .meta { font-size: 12px; color: #6b7280; margin-top: 6px; text-align: center; }
 
         /* Footer */
@@ -115,8 +117,22 @@
             <p>Returning participants and instructors: continue where you left off.</p>
             <form method="POST" action="{{ route('login.attempt') }}">
                 @csrf
-                <input type="text"     name="username" placeholder="Username or email" autocomplete="username" required>
-                <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+                {{-- LoginController throws ValidationException keyed on
+                     `username`, so both the "credentials don't match" failure
+                     and missing-field errors surface here. Other keys are
+                     listed in a fallback below. --}}
+                @if ($errors->any())
+                    <div class="login-error" role="alert">
+                        @foreach ($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                @endif
+                <input type="text"     name="username" placeholder="Username or email" autocomplete="username" required
+                       value="{{ old('username') }}"
+                       class="{{ $errors->has('username') ? 'has-error' : '' }}">
+                <input type="password" name="password" placeholder="Password" autocomplete="current-password" required
+                       class="{{ $errors->has('password') ? 'has-error' : '' }}">
                 <button type="submit" class="btn">Sign in</button>
             </form>
             <div class="meta">

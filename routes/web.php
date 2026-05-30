@@ -28,9 +28,16 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest.redirect')->get('/', fn () => view('welcome'));
 
 // ── Auth — email/password login (with legacy MD5 → bcrypt upgrade) ─────────
+// POST /login is rate-limited to defeat credential-stuffing / brute-force
+// attacks. Especially relevant because legacy MD5 password hashes are
+// silently upgraded on first success (LoginController::verifyPassword) —
+// without throttle, an attacker with a leaked MD5 list could crack
+// accounts at line-rate. 5 attempts/minute/IP matches industry norm.
 Route::middleware('guest.redirect')->group(function () {
-    Route::get('/login',   [LoginController::class, 'show'])->name('login');
-    Route::post('/login',  [LoginController::class, 'login'])->name('login.attempt');
+    Route::get('/login',  [LoginController::class, 'show'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])
+        ->middleware('throttle:5,1')
+        ->name('login.attempt');
 });
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 

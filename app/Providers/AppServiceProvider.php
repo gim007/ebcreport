@@ -39,12 +39,29 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // R-12: force every generated URL to use https in production so links
-        // emitted server-side (password reset emails, signed URLs, etc.) match
-        // the HTTPS the request middleware enforces. Skipped in non-prod so
-        // local http://localhost dev keeps working.
         if ($this->app->environment('production')) {
+            // R-12: force every generated URL to use https in production so links
+            // emitted server-side (password reset emails, signed URLs, etc.) match
+            // the HTTPS the request middleware enforces. Skipped in non-prod so
+            // local http://localhost dev keeps working.
             URL::forceScheme('https');
+
+            // R-08 / R-05 production-safety guards. Fail at boot rather than
+            // letting a misconfigured production silently leak stack traces
+            // (APP_DEBUG=true) or store plaintext session payloads
+            // (SESSION_ENCRYPT=false). The .env.production.example template
+            // sets these correctly, but this catches the "someone copied the
+            // dev .env to prod" mistake before the first user request.
+            if (config('app.debug')) {
+                throw new \RuntimeException(
+                    'APP_DEBUG must be false in production (see .env.production.example).'
+                );
+            }
+            if (! config('session.encrypt')) {
+                throw new \RuntimeException(
+                    'SESSION_ENCRYPT must be true in production (see .env.production.example).'
+                );
+            }
         }
 
         // Accept legacy MD5 admin passwords; silently re-hash to bcrypt on login.

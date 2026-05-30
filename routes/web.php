@@ -84,7 +84,10 @@ Route::get('/courses/{courseId}/register',  [RegisterParticipantController::clas
 Route::post('/courses/{courseId}/register', [RegisterParticipantController::class, 'store'])->name('participant.register.store');
 
 // ── Authenticated participant area ───────────────────────────────────────────
-Route::middleware(['auth'])->name('participant.')->group(function () {
+// `participant` middleware (EnsureParticipant) blocks instructor sessions
+// from hitting participant-only surfaces (/account, /test, /reports, etc.).
+// Symmetric with the `instructor` middleware applied below.
+Route::middleware(['auth', 'participant'])->name('participant.')->group(function () {
     // Account / profile self-service (legacy parity)
     Route::get('/account',           [ParticipantAccountController::class, 'show'])->name('account');
     Route::put('/account',           [ParticipantAccountController::class, 'update'])->name('account.update');

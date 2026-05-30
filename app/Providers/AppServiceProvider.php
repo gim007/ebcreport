@@ -11,6 +11,7 @@ use App\Services\ReportPdfService;
 use App\Services\SmsOtpService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Stripe\StripeClient;
 use Twilio\Rest\Client as TwilioClient;
@@ -38,6 +39,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // R-12: force every generated URL to use https in production so links
+        // emitted server-side (password reset emails, signed URLs, etc.) match
+        // the HTTPS the request middleware enforces. Skipped in non-prod so
+        // local http://localhost dev keeps working.
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         // Accept legacy MD5 admin passwords; silently re-hash to bcrypt on login.
         Hash::extend('admin', fn () => new AdminHasher());
 

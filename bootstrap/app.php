@@ -18,6 +18,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'participant.terms' => \App\Http\Middleware\ParticipantTermsAccepted::class,
             'guest.redirect'    => \App\Http\Middleware\RedirectIfAuthenticated::class,
         ]);
+
+        // R-12: trust the upstream proxy / load balancer so $request->isSecure()
+        // correctly reflects the original scheme and forced HTTPS redirects work.
+        // Use TRUSTED_PROXIES env (CIDR or single IP) in prod; '*' is fine for
+        // platforms where you cannot enumerate proxy IPs (Heroku, App Runner, etc).
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
+
+        // R-12: emit HSTS / CSP / X-Frame-Options / X-Content-Type-Options on
+        // every response (web + Filament + Livewire).
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // R-08: production must not leak detail to users.

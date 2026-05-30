@@ -10,6 +10,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -26,14 +27,6 @@ class InstructorResource extends Resource
     protected static ?string $model = Instructor::class;
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?int    $navigationSort = 2;
-
-    private const COUNTRIES = [
-        'US' => 'United States', 'CA' => 'Canada', 'GB' => 'United Kingdom',
-        'AU' => 'Australia', 'IN' => 'India', 'DE' => 'Germany', 'FR' => 'France',
-        'IE' => 'Ireland', 'NZ' => 'New Zealand', 'ZA' => 'South Africa',
-        'MX' => 'Mexico', 'BR' => 'Brazil', 'JP' => 'Japan',
-        'SG' => 'Singapore', 'NL' => 'Netherlands', 'ES' => 'Spain',
-    ];
 
     private const TIMEZONES = [
         'America/New_York'    => 'Eastern Time (US)',
@@ -62,14 +55,7 @@ class InstructorResource extends Resource
                         'Male' => 'Male', 'Female' => 'Female',
                         'Other' => 'Other', 'Prefer not to say' => 'Prefer not to say',
                     ])->columnSpan(4),
-                ]),
-
-            Section::make('Contact')
-                ->description('Phone is required for SMS recovery (R-31).')
-                ->columns(2)
-                ->schema([
-                    TextInput::make('ins_email')->label('Email')->email()->maxLength(255),
-                    TextInput::make('ins_phone')->label('Phone')->tel()->maxLength(50),
+                    Select::make('ins_timezone')->label('Timezone')->options(self::TIMEZONES)->searchable()->columnSpan(8),
                 ]),
 
             Section::make('Organization & Access')
@@ -77,8 +63,13 @@ class InstructorResource extends Resource
                 ->schema([
                     Select::make('uni_id')
                         ->label('Organization')
-                        ->relationship('organization', 'uni_name')
+                        ->options(fn () => \App\Models\Organization::query()
+                            ->where('is_hidden', false)
+                            ->orderBy('uni_name')
+                            ->pluck('uni_name', 'uni_id')
+                            ->all())
                         ->searchable()
+                        ->preload()
                         ->required(),
                     Select::make('admin_approval')
                         ->label('Approval Status')
@@ -93,18 +84,34 @@ class InstructorResource extends Resource
                 ->schema([
                     TextInput::make('ins_address')->label('Street')->maxLength(200)->columnSpan(8),
                     TextInput::make('ins_address_cont')->label('Apt / Suite')->maxLength(200)->columnSpan(4),
-                    TextInput::make('ins_city')->label('City')->maxLength(100)->columnSpan(4),
-                    TextInput::make('ins_state')->label('State / Province')
-                        ->helperText('US: 2-letter (IL, TX, CA). Intl: free-text.')
-                        ->maxLength(100)->columnSpan(3),
-                    TextInput::make('ins_zip')->label('ZIP / Postal')->maxLength(20)->columnSpan(2),
-                    Select::make('ins_country')->label('Country')->options(self::COUNTRIES)->searchable()->columnSpan(3),
+                    TextInput::make('ins_city')->label('City')->maxLength(100)->columnSpan(7),
+                    Select::make('ins_state')
+                        ->label('State')
+                        ->options(config('locations.us_states'))
+                        ->searchable()
+                        ->visible(fn (Get $get) => $get('ins_country') === 'US')
+                        ->dehydrated(fn (Get $get) => $get('ins_country') === 'US')
+                        ->columnSpan(5),
+                    TextInput::make('ins_state')
+                        ->label('State / Province')
+                        ->maxLength(100)
+                        ->visible(fn (Get $get) => $get('ins_country') !== 'US')
+                        ->dehydrated(fn (Get $get) => $get('ins_country') !== 'US')
+                        ->columnSpan(5),
+                    TextInput::make('ins_zip')->label('ZIP / Postal')->maxLength(20)->columnSpan(4),
+                    Select::make('ins_country')
+                        ->label('Country')
+                        ->options(config('locations.countries'))
+                        ->searchable()
+                        ->live()
+                        ->columnSpan(8),
                 ]),
-
-            Section::make('Scheduling')
+            
+            Section::make('Contact')
                 ->columns(2)
                 ->schema([
-                    Select::make('ins_timezone')->label('Timezone')->options(self::TIMEZONES)->searchable(),
+                    TextInput::make('ins_email')->label('Email')->email()->maxLength(255),
+                    TextInput::make('ins_phone')->label('Phone')->tel()->maxLength(50),
                 ]),
 
             Section::make('Login Credentials')

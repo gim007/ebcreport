@@ -1,3 +1,4 @@
+@php $isUs = old('country') === 'US'; @endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -127,11 +128,38 @@
                                class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1" for="state">
-                            State / Province <span class="text-gray-400 font-normal text-xs">(US: 2-letter)</span>
-                        </label>
-                        <input id="state" name="state" type="text" required maxlength="100" value="{{ old('state') }}"
-                               class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('state') border-red-400 @enderror">
+                        {{-- Two state widgets share `name="state"`. JS toggles
+                             visibility and the `disabled` attribute so only
+                             the active one submits. Default visibility comes
+                             from old('country') so post-validation reloads
+                             render the right widget. --}}
+                        <label class="block text-sm font-medium mb-1" for="state_us">State / Province</label>
+
+                        <select id="state_us" name="state" required
+                                data-state-widget="us"
+                                @class([
+                                    'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500',
+                                    'hidden' => ! $isUs,
+                                    'border-red-400' => $errors->has('state'),
+                                ])
+                                @if (! $isUs) disabled @endif>
+                            <option value="">&mdash; Select state &mdash;</option>
+                            @foreach (config('locations.us_states') as $code => $name)
+                                <option value="{{ $code }}" {{ $isUs && old('state') === $code ? 'selected' : '' }}>{{ $name }}</option>
+                            @endforeach
+                        </select>
+
+                        <input id="state_intl" name="state" type="text" required maxlength="100"
+                               data-state-widget="intl"
+                               value="{{ $isUs ? '' : old('state') }}"
+                               placeholder="State, province, or region"
+                               @class([
+                                   'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500',
+                                   'hidden' => $isUs,
+                                   'border-red-400' => $errors->has('state'),
+                               ])
+                               @if ($isUs) disabled @endif>
+
                         @error('state')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
@@ -147,13 +175,7 @@
                         <select id="country" name="country" required
                                 class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('country') border-red-400 @enderror">
                             <option value="">&mdash; Select &mdash;</option>
-                            @foreach ([
-                                'US' => 'United States', 'CA' => 'Canada', 'GB' => 'United Kingdom',
-                                'AU' => 'Australia', 'IN' => 'India', 'DE' => 'Germany', 'FR' => 'France',
-                                'IE' => 'Ireland', 'NZ' => 'New Zealand', 'ZA' => 'South Africa',
-                                'MX' => 'Mexico', 'BR' => 'Brazil', 'JP' => 'Japan',
-                                'SG' => 'Singapore', 'NL' => 'Netherlands', 'ES' => 'Spain',
-                            ] as $code => $name)
+                            @foreach (config('locations.countries') as $code => $name)
                                 <option value="{{ $code }}" {{ old('country') === $code ? 'selected' : '' }}>{{ $name }}</option>
                             @endforeach
                         </select>
@@ -221,6 +243,29 @@
         </p>
     </div>
 </div>
+
+<script>
+    (function () {
+        const country = document.getElementById('country');
+        const usSelect = document.querySelector('[data-state-widget="us"]');
+        const intlInput = document.querySelector('[data-state-widget="intl"]');
+        if (!country || !usSelect || !intlInput) return;
+
+        function swap() {
+            const isUs = country.value === 'US';
+            usSelect.classList.toggle('hidden', !isUs);
+            intlInput.classList.toggle('hidden', isUs);
+            usSelect.disabled = !isUs;
+            intlInput.disabled = isUs;
+            // Clear the inactive value so toggling US ⇄ intl doesn't carry
+            // stale text into the submitted payload.
+            if (isUs) intlInput.value = '';
+            else usSelect.value = '';
+        }
+
+        country.addEventListener('change', swap);
+    })();
+</script>
 
 </body>
 </html>

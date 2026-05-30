@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -25,14 +26,6 @@ class ParticipantResource extends Resource
     protected static ?string $navigationLabel = 'Participants';
     protected static ?int    $navigationSort = 3;
 
-    private const COUNTRIES = [
-        'US' => 'United States', 'CA' => 'Canada', 'GB' => 'United Kingdom',
-        'AU' => 'Australia', 'IN' => 'India', 'DE' => 'Germany', 'FR' => 'France',
-        'IE' => 'Ireland', 'NZ' => 'New Zealand', 'ZA' => 'South Africa',
-        'MX' => 'Mexico', 'BR' => 'Brazil', 'JP' => 'Japan',
-        'SG' => 'Singapore', 'NL' => 'Netherlands', 'ES' => 'Spain',
-    ];
-
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -48,43 +41,77 @@ class ParticipantResource extends Resource
                 ]),
 
             Section::make('Contact')
-                ->description('Phone is required for SMS recovery (R-31).')
                 ->columns(2)
                 ->schema([
                     TextInput::make('stud_email')->label('Email')->email()->nullable(),
                     TextInput::make('stud_phone')->label('Phone')->tel()->maxLength(50),
                 ]),
+            
+            Section::make('Mailing Address')
+                ->columns(12)
+                ->schema([
+                    TextInput::make('stud_address')->label('Street')->maxLength(200)->columnSpan(12),
+                    TextInput::make('stud_city')->label('City')->maxLength(100)->columnSpan(7),
+                    Select::make('stud_state')
+                        ->label('State')
+                        ->options(config('locations.us_states'))
+                        ->searchable()
+                        ->visible(fn (Get $get) => $get('stud_country') === 'US')
+                        ->dehydrated(fn (Get $get) => $get('stud_country') === 'US')
+                        ->columnSpan(5),
+                    TextInput::make('stud_state')
+                        ->label('State / Province')
+                        ->maxLength(100)
+                        ->visible(fn (Get $get) => $get('stud_country') !== 'US')
+                        ->dehydrated(fn (Get $get) => $get('stud_country') !== 'US')
+                        ->columnSpan(5),
+                    TextInput::make('stud_zip')->label('ZIP / Postal')->maxLength(20)->columnSpan(4),
+                    Select::make('stud_country')
+                        ->label('Country')
+                        ->options(config('locations.countries'))
+                        ->searchable()
+                        ->live()
+                        ->columnSpan(8),
+                ]),
 
             Section::make('Enrollment')
-                ->columns(3)
+                ->columns(1)
                 ->schema([
                     Select::make('inst_id')
                         ->label('Instructor')
-                        ->relationship('instructor', 'ins_lname')
-                        ->getOptionLabelFromRecordUsing(fn ($r) => $r ? trim(($r->ins_fname ?? '') . ' ' . ($r->ins_lname ?? '')) : '—')
-                        ->searchable(),
+                        ->options(function () {
+                            return \App\Models\Instructor::query()
+                                ->with('organization')
+                                ->orderBy('ins_lname')
+                                ->orderBy('ins_fname')
+                                ->get()
+                                ->mapWithKeys(fn ($i) => [
+                                    $i->ins_id => trim(($i->ins_fname ?? '') . ' ' . ($i->ins_lname ?? ''))
+                                        . ($i->organization?->uni_name ? " — {$i->organization->uni_name}" : ''),
+                                ])
+                                ->all();
+                        })
+                        ->searchable()
+                        ->preload(),
                     Select::make('course_id')
                         ->label('Course')
-                        ->relationship('course', 'course_name')
-                        ->searchable(),
+                        ->options(function () {
+                            return \App\Models\Course::query()
+                                ->orderBy('course_name')
+                                ->get()
+                                ->mapWithKeys(fn ($c) => [
+                                    $c->course_id => trim(($c->course_code ? "{$c->course_code} — " : '') . ($c->course_name ?? '')),
+                                ])
+                                ->all();
+                        })
+                        ->searchable()
+                        ->preload(),
                     TextInput::make('tot_credit')
                         ->label('Credits')
                         ->integer()
                         ->minValue(0)
                         ->default(0)
                         ->required(),
-                ]),
-
-            Section::make('Mailing Address')
-                ->columns(12)
-                ->schema([
-                    TextInput::make('stud_address')->label('Street')->maxLength(200)->columnSpan(12),
-                    TextInput::make('stud_city')->label('City')->maxLength(100)->columnSpan(4),
-                    TextInput::make('stud_state')->label('State / Province')
-                        ->helperText('US: 2-letter (IL, TX, CA). Intl: free-text.')
-                        ->maxLength(100)->columnSpan(3),
-                    TextInput::make('stud_zip')->label('ZIP / Postal')->maxLength(20)->columnSpan(2),
-                    Select::make('stud_country')->label('Country')->options(self::COUNTRIES)->searchable()->columnSpan(3),
                 ]),
 
             Section::make('Login Credentials')

@@ -78,8 +78,9 @@ Route::post('/courses/{courseId}/register', [RegisterParticipantController::clas
 
 // ── Authenticated participant area ───────────────────────────────────────────
 Route::middleware(['auth'])->name('participant.')->group(function () {
-    // Account
-    Route::get('/account',          [ParticipantAccountController::class, 'show'])->name('account');
+    // Account / profile self-service (legacy parity)
+    Route::get('/account',           [ParticipantAccountController::class, 'show'])->name('account');
+    Route::put('/account',           [ParticipantAccountController::class, 'update'])->name('account.update');
     Route::post('/account/password', [ParticipantAccountController::class, 'updatePassword'])->name('account.password');
 
     // Prepaid / scholarship codes (R-33)

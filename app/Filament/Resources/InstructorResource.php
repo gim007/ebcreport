@@ -28,20 +28,6 @@ class InstructorResource extends Resource
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';
     protected static ?int    $navigationSort = 2;
 
-    private const TIMEZONES = [
-        'America/New_York'    => 'Eastern Time (US)',
-        'America/Chicago'     => 'Central Time (US)',
-        'America/Denver'      => 'Mountain Time (US)',
-        'America/Los_Angeles' => 'Pacific Time (US)',
-        'America/Anchorage'   => 'Alaska Time',
-        'Pacific/Honolulu'    => 'Hawaii-Aleutian Time',
-        'Europe/London'       => 'London (GMT/BST)',
-        'Europe/Berlin'       => 'Berlin / Central Europe',
-        'Asia/Kolkata'        => 'India Standard Time',
-        'Asia/Singapore'      => 'Singapore',
-        'Australia/Sydney'    => 'Sydney',
-    ];
-
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -55,7 +41,7 @@ class InstructorResource extends Resource
                         'Male' => 'Male', 'Female' => 'Female',
                         'Other' => 'Other', 'Prefer not to say' => 'Prefer not to say',
                     ])->columnSpan(4),
-                    Select::make('ins_timezone')->label('Timezone')->options(self::TIMEZONES)->searchable()->columnSpan(8),
+                    Select::make('ins_timezone')->label('Timezone')->options(config('locations.timezones'))->searchable()->columnSpan(8),
                 ]),
 
             Section::make('Organization & Access')

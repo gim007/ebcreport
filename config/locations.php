@@ -9,9 +9,12 @@
  * Access:
  *   config('locations.countries')   // ['US' => 'United States', ...]
  *   config('locations.us_states')   // ['AL' => 'Alabama', ...]
+ *   config('locations.timezones')   // ['America/New_York' => 'Eastern Time (US)', ...]
  *
  * Country codes are ISO-3166-1 alpha-2. US state codes are USPS 2-letter
  * abbreviations, matching legacy storage in `ebc_student.stud_state`.
+ * Timezone keys are IANA tz database identifiers, stored verbatim in
+ * `ebc_instructor.ins_timezone`.
  */
 
 return [
@@ -33,6 +36,20 @@ return [
         'SG' => 'Singapore',
         'NL' => 'Netherlands',
         'ES' => 'Spain',
+    ],
+
+    'timezones' => [
+        'America/New_York'    => 'Eastern Time (US)',
+        'America/Chicago'     => 'Central Time (US)',
+        'America/Denver'      => 'Mountain Time (US)',
+        'America/Los_Angeles' => 'Pacific Time (US)',
+        'America/Anchorage'   => 'Alaska Time',
+        'Pacific/Honolulu'    => 'Hawaii-Aleutian Time',
+        'Europe/London'       => 'London (GMT/BST)',
+        'Europe/Berlin'       => 'Berlin / Central Europe',
+        'Asia/Kolkata'        => 'India Standard Time',
+        'Asia/Singapore'      => 'Singapore',
+        'Australia/Sydney'    => 'Sydney',
     ],
 
     'us_states' => [

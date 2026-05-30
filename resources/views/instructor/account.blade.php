@@ -7,19 +7,6 @@
     $selectedCountry = old('country', $instructor->ins_country);
     $selectedState   = old('state',   $instructor->ins_state);
     $isUs            = $selectedCountry === 'US';
-    $timezones = [
-        'America/New_York'    => 'Eastern Time (US)',
-        'America/Chicago'     => 'Central Time (US)',
-        'America/Denver'      => 'Mountain Time (US)',
-        'America/Los_Angeles' => 'Pacific Time (US)',
-        'America/Anchorage'   => 'Alaska Time',
-        'Pacific/Honolulu'    => 'Hawaii-Aleutian Time',
-        'Europe/London'       => 'London (GMT/BST)',
-        'Europe/Berlin'       => 'Berlin / Central Europe',
-        'Asia/Kolkata'        => 'India Standard Time',
-        'Asia/Singapore'      => 'Singapore',
-        'Australia/Sydney'    => 'Sydney',
-    ];
 @endphp
 
 <h1 class="text-2xl font-bold mb-2">My Account</h1>
@@ -207,7 +194,7 @@
                     <select id="timezone" name="timezone" required
                             class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">— Select —</option>
-                        @foreach ($timezones as $tz => $label)
+                        @foreach (config('locations.timezones') as $tz => $label)
                             <option value="{{ $tz }}" {{ old('timezone', $instructor->ins_timezone) === $tz ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
